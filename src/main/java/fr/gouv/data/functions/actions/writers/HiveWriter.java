@@ -48,7 +48,7 @@ public class HiveWriter implements Consumer<Dataset<Row>> {
             log.info("writing data into hive table = {}...", fullTableName);
             rowDataset
                     .write()
-                    .mode("overwrite")
+                    .mode("append")
                     .saveAsTable(fullTableName);
 
         } catch (IOException ioException){

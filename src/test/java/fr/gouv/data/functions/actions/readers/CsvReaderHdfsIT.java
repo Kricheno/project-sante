@@ -56,7 +56,7 @@ public class CsvReaderHdfsIT {
 
     @Test
     public void testReader(){
-        log.info("running DataTourismReaderWithHadoopUnitUT.testReader");
+        log.info("running DataSanteReaderWithHadoopUnitUT.testReader");
         log.info("Default hdfs fileSystem={}", hdfs.getConf().get("fs.defaultFS"));
         log.info("Default spark fileSystem={}", sparkSession.sparkContext().hadoopConfiguration().get("fs.defaultFS"));
         log.info("sparkSession.sparkContext.hadoopConfiguration={}", sparkSession.sparkContext().hadoopConfiguration());

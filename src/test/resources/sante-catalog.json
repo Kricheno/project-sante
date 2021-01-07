@@ -1,0 +1,29 @@
+{
+  "table": {
+    "namespace": "sante",
+    "name": "aides"
+  },
+  "rowkey": "key",
+  "columns": {
+    "key": {
+      "cf": "rowkey",
+      "col": "key",
+      "type": "string"
+    },
+    "nombre_aides": {
+      "cf": "nombre_aides",
+      "col": "nombre_aides",
+      "type": "double"
+    },
+    "montant_total": {
+      "cf": "montant_total",
+      "col": "montant_total",
+      "type": "double"
+    },
+    "libelle_region": {
+      "cf": "loc",
+      "col": "libelle_region",
+      "type": "string"
+    }
+  }
+}

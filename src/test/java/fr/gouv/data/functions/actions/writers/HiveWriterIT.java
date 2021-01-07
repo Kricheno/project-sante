@@ -36,8 +36,10 @@ public class HiveWriterIT {
                 .getOrCreate();
 
         List<HBaseRow> expected = Arrays.asList(
-                HBaseRow.builder().key("k1").libelle_region("somewhere").build(),
-                new HBaseRow("key2", 100d, 200000d, "Paris")
+                HBaseRow.builder().key("k1").libelle_region("Bordeaux").nombre_aides(50d).montant_total(20000d).build(),
+                new HBaseRow("key2", 100d, 200000d, "Paris"),
+                new HBaseRow("key2", 200d, 150000d, "Toulouse")
+
         );
 
         Dataset<Row> expectedData = sparkSession.createDataset(expected, Encoders.bean(HBaseRow.class)).toDF();
@@ -55,6 +57,7 @@ public class HiveWriterIT {
         Dataset<HBaseRow> actualData = sparkSession.sql(String.format("SELECT * from %s.%s", dbName, tableName))
                 .as(Encoders.bean(HBaseRow.class));
 
+        log.info("daaaaata {}",actualData.collectAsList());
         assertThat(actualData.collectAsList()).containsExactlyInAnyOrder(expected.toArray(new HBaseRow[0]));
     }
 
