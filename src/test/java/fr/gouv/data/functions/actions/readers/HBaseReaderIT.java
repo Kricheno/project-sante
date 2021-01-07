@@ -1,65 +1,76 @@
 package fr.gouv.data.functions.actions.readers;
 
-import fr.gouv.data.DataTest;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import fr.gouv.data.HBaseRow;
 import fr.gouv.data.functions.actions.writers.HBaseWriter;
 import fr.gouv.data.functions.actions.writers.HBaseWriterIT;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.TableInputFormat;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.execution.datasources.hbase.HBaseTableCatalog;
-import org.apache.spark.sql.execution.datasources.hbase.HBaseTableScanRDD;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+
+
 @Slf4j
 public class HBaseReaderIT {
+    private static final String catalogName = "sante-catalog.json";
 
-
-    private static SparkSession sparkSession ;
-    private static String catalogName = "sante-catalog.json";
-    private static List<DataTest> expected = Arrays.asList(
-            DataTest.builder().key("k1").libelle_region("Auvergne-Rhône-Alpes").build(),
-            new DataTest("key2", 100d, 15000d, "Auvergne-Rhône-Alpes"),
-            new DataTest("key2", 120d, 20000d, "Bourgogne-Franche-Comté"),
-            new DataTest("key2", 56d, 10000d, "Auvergne-Rhône-Alpes"),
-            new DataTest("key4", 324d, 3500d, "Bretagne"),
-            new DataTest("key2", 128d, 25000d, "Auvergne-Rhône-Alpes")
-
-    );
+    private static final Config config = ConfigFactory.load("application.conf");
+    private static SparkSession sparkSession;
 
     @BeforeClass
-    public static void addDataHBase(){
-        sparkSession=SparkSession
-                .builder()
-                .master("local[2]")
-                .appName("test-reader")
+    public static void setUp() {
+        sparkSession = SparkSession.builder().master("local[2]").appName("test-reader")
                 .getOrCreate();
 
-        Dataset<Row> expectedData = sparkSession.createDataset(expected, Encoders.bean(DataTest.class)).toDF();
+        List<HBaseRow> expected = Arrays.asList(
+                HBaseRow.builder().key("k1").libelle_region("Auvergne-Rhône-Alpes").build(),
+                new HBaseRow("key2", 100d, 15000d, "Auvergne-Rhône-Alpes"),
+                new HBaseRow("key2", 120d, 20000d, "Bourgogne-Franche-Comté"),
+                new HBaseRow("key2", 56d, 10000d, "Auvergne-Rhône-Alpes"),
+                new HBaseRow("key2", 324d, 35000d, "Bretagne"),
+                new HBaseRow("key2", 128d, 25000d, "Auvergne-Rhône-Alpes")
+
+        );
+
+        Dataset<Row> expectedData = sparkSession.createDataset(expected, Encoders.bean(HBaseRow.class)).toDF();
         expectedData.printSchema();
         expectedData.show();
 
         new HBaseWriter(catalogName).accept(expectedData);
 
+
     }
-
     @Test
-    public void testReader(){
+    public void testReader() throws IOException {
+        log.info("running hbaseReader test");
+        String catalogPathStr = getClass().getClassLoader().getResource(catalogName).getPath();
+        log.info("catalogPathStr={}", catalogPathStr);
+        String catalog = String.join("\n", Files.readAllLines(Paths.get(catalogPathStr), Charset.defaultCharset()));
+        Dataset<HBaseRow> hBaseReader= new HBaseReader(catalog,sparkSession).get();
+        log.info("Done!");
+        hBaseReader.show(false);
+        hBaseReader.printSchema();
 
-        Dataset<DataTest> ds = new HBaseReader(sparkSession).get();
-        ds.show(false);
-
+        assertThat(hBaseReader.collectAsList().isEmpty()).isFalse();
     }
 }
