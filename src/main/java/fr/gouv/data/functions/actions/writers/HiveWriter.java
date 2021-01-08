@@ -40,11 +40,6 @@ public class HiveWriter implements Consumer<Dataset<Row>> {
             log.info("creating database using createDbQuery={}...", createDbQuery);
             sparkSession.sql(createDbQuery);
 
-
-
-            //rowDataset.createOrReplaceTempView(tableName);
-            //sparkSession.sql(String.format("CREATE TABLE IF NOT EXISTS %s (%s) USING hive", fullTableName, schema));
-
             log.info("writing data into hive table = {}...", fullTableName);
             rowDataset
                     .write()

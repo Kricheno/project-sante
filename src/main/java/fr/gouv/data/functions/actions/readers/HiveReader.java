@@ -2,16 +2,10 @@ package fr.gouv.data.functions.actions.readers;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-
-import java.io.IOException;
 import java.util.function.Supplier;
 @Slf4j
 @AllArgsConstructor
@@ -27,15 +21,6 @@ public class HiveReader implements Supplier<Dataset<Row>> {
 
         String fullTableName = String.format("%s.%s", dbName, tableName);
 
-        //try {
-//
-//            FileSystem hdfs = FileSystem.get(sparkSession.sparkContext().hadoopConfiguration());
-//
-//            Path fullDbPath = new Path(fullDbDataPathStr);
-//            if (hdfs.exists(fullDbPath)) {
-//                hdfs.delete(fullDbPath, true);
-//            }
-//            hdfs.mkdirs(fullDbPath);
             String createDbQuery = String.format("SELECT * FROM %s", fullTableName);
             log.info("select data using createDbQuery={}...", createDbQuery);
             sparkSession.sql(createDbQuery);

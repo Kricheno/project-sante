@@ -30,7 +30,7 @@ public class HBaseWriter implements Consumer<Dataset<Row>> {
 
             rowDataset
                     .write()
-                    .mode("overwrite")
+                    .mode("append")
                     .option(HBaseTableCatalog.tableCatalog(), catalog).option(HBaseTableCatalog.newTable(), "5")
                     .format("org.apache.spark.sql.execution.datasources.hbase")
                     .save();

@@ -1,6 +1,7 @@
 package fr.gouv.data.functions.actions.writers;
 
 import fr.gouv.data.DataTest;
+import fr.gouv.data.HBaseRow;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,8 +45,8 @@ public class HBaseWriterIT {
             "      \"type\": \"double\"\n" +
             "    },\n" +
             "    \"libelle_region\": {\n" +
-            "      \"cf\": \"loc\",\n" +
-            "      \"col\": \"address\",\n" +
+            "      \"cf\": \"libelle_region\",\n" +
+            "      \"col\": \"libelle_region\",\n" +
             "      \"type\": \"string\"\n" +
             "    }\n" +
             "  }\n" +
@@ -57,17 +58,18 @@ public class HBaseWriterIT {
         SparkSession sparkSession = SparkSession.builder().master("local[2]").appName("test-writer")
                 .getOrCreate();
 
-        List<DataTest> expected = Arrays.asList(
-                DataTest.builder().key("k1").libelle_region("Auvergne-Rhône-Alpes").build(),
-                new DataTest("key2", 100d, 15000d, "Auvergne-Rhône-Alpes"),
-                new DataTest("key2", 120d, 2000d, "Bourgogne-Franche-Comté"),
-                new DataTest("key2", 5d, 10000d, "Auvergne-Rhône-Alpes"),
-                new DataTest("key3", 324d, 35000d, "Paris"),
-                new DataTest("key", 128d, 25000d, "Auvergne-Rhône-Alpes")
+        List<HBaseRow> expected = Arrays.asList(
+                HBaseRow.builder().key("key1").nombre_aides(325d).montant_total(5888d).libelle_region("Auvergne-Rhône-Alpes").build(),
+                new HBaseRow("key2", 100d, 15000d, "Auvergne-Rhône-Alpes"),
+                new HBaseRow("key2", 120d, 2000d, "Bourgogne-Franche-Comté"),
+                new HBaseRow("key2", 5d, 10000d, "Auvergne-Rhône-Alpes"),
+                new HBaseRow("key3", 324d, 35000d, "Paris"),
+                new HBaseRow("key4", 250d, 8500d, "Bordeaux"),
+                new HBaseRow("key4", 128d, 25000d, "Bretagne")
 
         );
 
-        Dataset<Row> expectedData = sparkSession.createDataset(expected, Encoders.bean(DataTest.class)).toDF();
+        Dataset<Row> expectedData = sparkSession.createDataset(expected, Encoders.bean(HBaseRow.class)).toDF();
         expectedData.printSchema();
         expectedData.show();
 
